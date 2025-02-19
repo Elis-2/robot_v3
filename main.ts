@@ -1,17 +1,22 @@
-let dist = 0
+radio.onReceivedNumber(function (receivedNumber) {
+    if (receivedNumber == 0) {
+        basic.showIcon(IconNames.Yes)
+        radio.sendNumber(1)
+    }
+})
 let scan = false
+let approach = false
+let dist = 0
+let turning = false
+let turn = false
+let turning_left = false
+let turning_right = false
+let turn_right = false
 let repositioning = false
 let release = false
 let transport = false
 let capture = false
 let positioning = false
-let approach = false
-let turn = false
-let turn_right = false
-let turning_right = false
-let turn_left = false
-let turning_left = false
-let turning = false
 radio.setGroup(2)
 radio.sendString("")
 basic.showIcon(IconNames.No)
@@ -19,13 +24,14 @@ maqueen.writeLED(maqueen.LED.LEDLeft, maqueen.LEDswitch.turnOn)
 maqueen.writeLED(maqueen.LED.LEDRight, maqueen.LEDswitch.turnOn)
 scan = true
 basic.forever(function () {
+    let turn_left = 0
     if (turn_right && !turning_right) {
         maqueen.motorRun(maqueen.Motors.M1, maqueen.Dir.CW, 50)
         maqueen.motorRun(maqueen.Motors.M2, maqueen.Dir.CCW, 50)
         turning_right = true
         turning_left = false
         turning = true
-    }else if (turn_left && !turning_left) {
+    } else if (turn_left && !turning_left) {
         maqueen.motorRun(maqueen.Motors.M1, maqueen.Dir.CW, 50)
         maqueen.motorRun(maqueen.Motors.M2, maqueen.Dir.CCW, 50)
         turning_left = true
@@ -50,11 +56,5 @@ basic.forever(function () {
             approach = true
         }
         basic.pause(25)
-    }
-})
-radio.onReceivedNumber(function(receivedNumber: number) {
-    if (receivedNumber == 0){
-        basic.showIcon(IconNames.Yes)
-        radio.sendNumber(1)
     }
 })
