@@ -89,14 +89,14 @@ maqueen.writeLED(maqueen.LED.LEDLeft, maqueen.LEDswitch.turnOn)
 maqueen.writeLED(maqueen.LED.LEDRight, maqueen.LEDswitch.turnOn)
 basic.forever(function () {
     if (turn_right && !(turning_right)) {
-        maqueen.motorRun(maqueen.Motors.M1, maqueen.Dir.CW, 50)
-        maqueen.motorRun(maqueen.Motors.M2, maqueen.Dir.CCW, 50)
+        maqueen.motorRun(maqueen.Motors.M1, maqueen.Dir.CW, 25)
+        maqueen.motorRun(maqueen.Motors.M2, maqueen.Dir.CCW, 25)
         turning_right = true
         turning_left = false
         turning = true
     } else if (turn_left && !(turning_left)) {
-        maqueen.motorRun(maqueen.Motors.M1, maqueen.Dir.CW, 50)
-        maqueen.motorRun(maqueen.Motors.M2, maqueen.Dir.CCW, 50)
+        maqueen.motorRun(maqueen.Motors.M1, maqueen.Dir.CW, 25)
+        maqueen.motorRun(maqueen.Motors.M2, maqueen.Dir.CCW, 25)
         turning_left = true
         turning_right = false
         turning = true
