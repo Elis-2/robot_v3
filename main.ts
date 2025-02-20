@@ -87,7 +87,6 @@ let move_back = false
 let moving_forward = false
 let moving_back = false
 let pos_servo = 0
-let positioning = false
 let capture = false
 let transport = false
 let release = false
@@ -97,6 +96,7 @@ radio.sendString("")
 basic.showIcon(IconNames.No)
 maqueen.writeLED(maqueen.LED.LEDLeft, maqueen.LEDswitch.turnOn)
 maqueen.writeLED(maqueen.LED.LEDRight, maqueen.LEDswitch.turnOn)
+maqueen.servoRun(maqueen.Servos.S1,180)
 basic.forever(function () {
     if (turn_right && !(turning_right)) {
         maqueen.motorRun(maqueen.Motors.M1, maqueen.Dir.CW, turn_speed)
@@ -136,5 +136,31 @@ basic.forever(function () {
     }else if (approach){
         move = true
         move_forward = true
+        dist = maqueen.Ultrasonic()
+        if (dist <= 5 ){
+            move = false
+            move_forward = false
+            approach = false
+            capture = true
+        }
+    }else if (capture){
+        make_uturn("left")
     }
 })
+function make_uturn(direction = "left") {
+    switch (direction) {
+        case "left":
+            maqueen.motorRun(maqueen.Motors.M2, maqueen.Dir.CW, 50)
+            maqueen.motorRun(maqueen.Motors.M1, maqueen.Dir.CCW, 50)
+            basic.pause(500)
+            maqueen.motorStop(maqueen.Motors.All)
+            break
+        case "right":
+            maqueen.motorRun(maqueen.Motors.M1, maqueen.Dir.CW, 50)
+            maqueen.motorRun(maqueen.Motors.M2, maqueen.Dir.CCW, 50)
+            basic.pause(500)
+            maqueen.motorStop(maqueen.Motors.All)
+            break
+
+    }
+}
