@@ -71,8 +71,9 @@ radio.onReceivedValue(function (name, value) {
         turn_servo()
     }
 })
-let movement_speed = 25
-let turn_speed = 25
+let target = 0
+const MOVEMENT_SPEED = 25
+const TURN_SPEED = 25
 let scan = false
 let approach = false
 let dist = 0
@@ -91,6 +92,10 @@ let capture = false
 let transport = false
 let release = false
 let repositioning = false
+let now = input.runningTime()
+let timer = false
+let start = 0
+let searching = false
 radio.setGroup(2)
 radio.sendString("")
 basic.showIcon(IconNames.No)
@@ -99,21 +104,21 @@ maqueen.writeLED(maqueen.LED.LEDRight, maqueen.LEDswitch.turnOn)
 maqueen.servoRun(maqueen.Servos.S1,180)
 basic.forever(function () {
     if (turn_right && !(turning_right)) {
-        maqueen.motorRun(maqueen.Motors.M1, maqueen.Dir.CW, turn_speed)
-        maqueen.motorRun(maqueen.Motors.M2, maqueen.Dir.CCW, turn_speed)
+        maqueen.motorRun(maqueen.Motors.M1, maqueen.Dir.CW, TURN_SPEED)
+        maqueen.motorRun(maqueen.Motors.M2, maqueen.Dir.CCW, TURN_SPEED)
         turning_right = true
         turning_left = false
         moving = true
     } else if (turn_left && !(turning_left)) {
-        maqueen.motorRun(maqueen.Motors.M1, maqueen.Dir.CW, turn_speed)
-        maqueen.motorRun(maqueen.Motors.M2, maqueen.Dir.CCW, turn_speed)
+        maqueen.motorRun(maqueen.Motors.M1, maqueen.Dir.CW, TURN_SPEED)
+        maqueen.motorRun(maqueen.Motors.M2, maqueen.Dir.CCW, TURN_SPEED)
         turning_left = true
         turning_right = false
         moving = true
     }else if (move_forward && !moving_forward){
-        maqueen.motorRun(maqueen.Motors.All, maqueen.Dir.CW,movement_speed)
+        maqueen.motorRun(maqueen.Motors.All, maqueen.Dir.CW,MOVEMENT_SPEED)
     }else if (move_back && !moving_back){
-        maqueen.motorRun(maqueen.Motors.All,maqueen.Dir.CCW,movement_speed)
+        maqueen.motorRun(maqueen.Motors.All,maqueen.Dir.CCW,MOVEMENT_SPEED)
     }else if (!(move) && moving) {
         maqueen.motorStop(maqueen.Motors.All)
         moving = false
@@ -131,20 +136,42 @@ basic.forever(function () {
             turn_right = false
             scan = false
             approach = true
+            target = dist
+        }
+        if (!timer){
+            start = input.runningTime()
+            timer =true
+        }
+        now =input.runningTime()
+        if ((now-start)>=20000){
+
         }
         basic.pause(25)
     }else if (approach){
         move = true
         move_forward = true
         dist = maqueen.Ultrasonic()
-        if (dist <= 5 ){
+        if (dist <= 6) {
             move = false
             move_forward = false
+            maqueen.motorRun(maqueen.Motors.M1, maqueen.Dir.CW, 55)
+            maqueen.motorRun(maqueen.Motors.M2, maqueen.Dir.CCW, 55)
+            basic.pause(550)
+            maqueen.motorStop(maqueen.Motors.All)
+            maqueen.motorRun(maqueen.Motors.All, maqueen.Dir.CCW, 15)
+            basic.pause(100)
+            maqueen.motorStop(maqueen.Motors.All)
+            maqueen.servoRun(maqueen.Servos.S1, 0)
+            basic.pause(1000)
             approach = false
-            capture = true
+        }else if (dist <= target){
+            target = dist
+        }else if (dist >= target){
+            approach = false
+            move_forward = false
+            move = false
+            scan = true
         }
-    }else if (capture){
-        make_uturn("left")
     }
 })
 function make_uturn(direction = "left") {
@@ -164,3 +191,20 @@ function make_uturn(direction = "left") {
 
     }
 }
+/*basic.forever(function () {
+    dist = maqueen.Ultrasonic()
+    if (dist <= 6) {
+        move = false
+        maqueen.motorRun(maqueen.Motors.M1, maqueen.Dir.CW, 55)
+        maqueen.motorRun(maqueen.Motors.M2, maqueen.Dir.CCW, 55)
+        basic.pause(550)
+        maqueen.motorStop(maqueen.Motors.All)
+        music.play(music.stringPlayable("A E A G C5 A - - ", 450), music.PlaybackMode.UntilDone)
+        maqueen.motorRun(maqueen.Motors.All, maqueen.Dir.CCW, 15)
+        basic.pause(100)
+        maqueen.servoRun(maqueen.Servos.S2, 0)
+        basic.pause(1000)
+        move = true
+    }
+})*/
+
