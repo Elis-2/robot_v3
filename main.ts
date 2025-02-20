@@ -1,3 +1,37 @@
+//speeds
+const MOVEMENT_SPEED = 25
+const TURN_SPEED = 25
+
+//movement
+let moving = false
+let move = false
+let turning_left = false
+let turning_right = false
+let turn_right = false
+let turn_left = false
+let move_forward = false
+let move_back = false
+let moving_forward = false
+let moving_back = false
+
+//states
+let scan = false
+let approach = false
+let capture = false
+let transport = false
+let release = false
+let repositioning = false
+let timer = false
+let searching = false
+
+//diverse
+let now = 0
+let start = 0
+let target = 0
+let pos_servo = 0
+let dist = 0
+
+//test movement functions
 function turn_servo () {
     pos_servo = (pos_servo + 180) % 360
     maqueen.servoRun(maqueen.Servos.S1, pos_servo)
@@ -7,19 +41,7 @@ function move_fwd () {
     basic.pause(50)
     maqueen.motorStop(maqueen.Motors.All)
 }
-radio.onReceivedNumber(function (receivedNumber) {
-    if (receivedNumber == 0) {
-        basic.showIcon(IconNames.Yes)
-        radio.sendNumber(1)
-    }else if (receivedNumber == 2){
-        basic.showIcon(IconNames.Target)
-        scan = true
-    }else if (receivedNumber == 3){
-        scan = false
-        approach = false
-        move = false
-    }
-})
+
 function fnc_turn_left () {
     maqueen.motorRun(maqueen.Motors.M1, maqueen.Dir.CCW, 100)
     maqueen.motorRun(maqueen.Motors.M2, maqueen.Dir.CW, 100)
@@ -32,6 +54,8 @@ function fnc_turn_right () {
     basic.pause(50)
     maqueen.motorStop(maqueen.Motors.All)
 }
+
+//rdio test receiver
 radio.onReceivedValue(function (name, value) {
     if (name == "right") {
         basic.showLeds(`
@@ -71,37 +95,32 @@ radio.onReceivedValue(function (name, value) {
         turn_servo()
     }
 })
-let target = 0
-const MOVEMENT_SPEED = 25
-const TURN_SPEED = 25
-let scan = false
-let approach = false
-let dist = 0
-let moving = false
-let move = false
-let turning_left = false
-let turning_right = false
-let turn_right = false
-let turn_left = false
-let move_forward = false
-let move_back = false
-let moving_forward = false
-let moving_back = false
-let pos_servo = 0
-let capture = false
-let transport = false
-let release = false
-let repositioning = false
-let now = input.runningTime()
-let timer = false
-let start = 0
-let searching = false
+
+
+//initialisation
 radio.setGroup(2)
 radio.sendString("")
 basic.showIcon(IconNames.No)
 maqueen.writeLED(maqueen.LED.LEDLeft, maqueen.LEDswitch.turnOn)
 maqueen.writeLED(maqueen.LED.LEDRight, maqueen.LEDswitch.turnOn)
 maqueen.servoRun(maqueen.Servos.S1,180)
+
+//radio receiver
+radio.onReceivedNumber(function (receivedNumber) {
+    if (receivedNumber == 0) {
+        basic.showIcon(IconNames.Yes)
+        radio.sendNumber(1)
+    } else if (receivedNumber == 2) {
+        basic.showIcon(IconNames.Target)
+        scan = true
+    } else if (receivedNumber == 3) {
+        scan = false
+        approach = false
+        move = false
+    }
+})
+
+//movement handler
 basic.forever(function () {
     if (turn_right && !(turning_right)) {
         maqueen.motorRun(maqueen.Motors.M1, maqueen.Dir.CW, TURN_SPEED)
@@ -126,6 +145,26 @@ basic.forever(function () {
         turning_right = false
     }
 })
+
+function make_uturn(direction = "left") {
+    switch (direction) {
+        case "left":
+            maqueen.motorRun(maqueen.Motors.M2, maqueen.Dir.CW, 50)
+            maqueen.motorRun(maqueen.Motors.M1, maqueen.Dir.CCW, 50)
+            basic.pause(500)
+            maqueen.motorStop(maqueen.Motors.All)
+            break
+        case "right":
+            maqueen.motorRun(maqueen.Motors.M1, maqueen.Dir.CW, 50)
+            maqueen.motorRun(maqueen.Motors.M2, maqueen.Dir.CCW, 50)
+            basic.pause(500)
+            maqueen.motorStop(maqueen.Motors.All)
+            break
+
+    }
+}
+
+//state handler
 basic.forever(function () {
     if (scan) {
         dist = maqueen.Ultrasonic()
@@ -144,7 +183,10 @@ basic.forever(function () {
         }
         now =input.runningTime()
         if ((now-start)>=20000){
-
+            scan = false
+            searching = true
+            move = false
+            turn_right = false
         }
         basic.pause(25)
     }else if (approach){
@@ -172,39 +214,7 @@ basic.forever(function () {
             move = false
             scan = true
         }
+    }else if (transport){
+        
     }
 })
-function make_uturn(direction = "left") {
-    switch (direction) {
-        case "left":
-            maqueen.motorRun(maqueen.Motors.M2, maqueen.Dir.CW, 50)
-            maqueen.motorRun(maqueen.Motors.M1, maqueen.Dir.CCW, 50)
-            basic.pause(500)
-            maqueen.motorStop(maqueen.Motors.All)
-            break
-        case "right":
-            maqueen.motorRun(maqueen.Motors.M1, maqueen.Dir.CW, 50)
-            maqueen.motorRun(maqueen.Motors.M2, maqueen.Dir.CCW, 50)
-            basic.pause(500)
-            maqueen.motorStop(maqueen.Motors.All)
-            break
-
-    }
-}
-/*basic.forever(function () {
-    dist = maqueen.Ultrasonic()
-    if (dist <= 6) {
-        move = false
-        maqueen.motorRun(maqueen.Motors.M1, maqueen.Dir.CW, 55)
-        maqueen.motorRun(maqueen.Motors.M2, maqueen.Dir.CCW, 55)
-        basic.pause(550)
-        maqueen.motorStop(maqueen.Motors.All)
-        music.play(music.stringPlayable("A E A G C5 A - - ", 450), music.PlaybackMode.UntilDone)
-        maqueen.motorRun(maqueen.Motors.All, maqueen.Dir.CCW, 15)
-        basic.pause(100)
-        maqueen.servoRun(maqueen.Servos.S2, 0)
-        basic.pause(1000)
-        move = true
-    }
-})*/
-
