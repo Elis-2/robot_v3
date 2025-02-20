@@ -30,25 +30,27 @@ let start = 0
 let target = 0
 let pos_servo = 0
 let dist = 0
+let prob_uturn = 10
+let nb_chng = 0
 
 //test movement functions
-function turn_servo () {
+function turn_servo() {
     pos_servo = (pos_servo + 180) % 360
     maqueen.servoRun(maqueen.Servos.S1, pos_servo)
 }
-function move_fwd () {
+function move_fwd() {
     maqueen.motorRun(maqueen.Motors.All, maqueen.Dir.CW, 100)
     basic.pause(50)
     maqueen.motorStop(maqueen.Motors.All)
 }
 
-function fnc_turn_left () {
+function fnc_turn_left() {
     maqueen.motorRun(maqueen.Motors.M1, maqueen.Dir.CCW, 100)
     maqueen.motorRun(maqueen.Motors.M2, maqueen.Dir.CW, 100)
     basic.pause(50)
     maqueen.motorStop(maqueen.Motors.All)
 }
-function fnc_turn_right () {
+function fnc_turn_right() {
     maqueen.motorRun(maqueen.Motors.M2, maqueen.Dir.CCW, 100)
     maqueen.motorRun(maqueen.Motors.M1, maqueen.Dir.CW, 100)
     basic.pause(50)
@@ -103,7 +105,7 @@ radio.sendString("")
 basic.showIcon(IconNames.No)
 maqueen.writeLED(maqueen.LED.LEDLeft, maqueen.LEDswitch.turnOn)
 maqueen.writeLED(maqueen.LED.LEDRight, maqueen.LEDswitch.turnOn)
-maqueen.servoRun(maqueen.Servos.S1,180)
+maqueen.servoRun(maqueen.Servos.S1, 180)
 
 //radio receiver
 radio.onReceivedNumber(function (receivedNumber) {
@@ -134,11 +136,11 @@ basic.forever(function () {
         turning_left = true
         turning_right = false
         moving = true
-    }else if (move_forward && !moving_forward){
-        maqueen.motorRun(maqueen.Motors.All, maqueen.Dir.CW,MOVEMENT_SPEED)
-    }else if (move_back && !moving_back){
-        maqueen.motorRun(maqueen.Motors.All,maqueen.Dir.CCW,MOVEMENT_SPEED)
-    }else if (!(move) && moving) {
+    } else if (move_forward && !moving_forward) {
+        maqueen.motorRun(maqueen.Motors.All, maqueen.Dir.CW, MOVEMENT_SPEED)
+    } else if (move_back && !moving_back) {
+        maqueen.motorRun(maqueen.Motors.All, maqueen.Dir.CCW, MOVEMENT_SPEED)
+    } else if (!(move) && moving) {
         maqueen.motorStop(maqueen.Motors.All)
         moving = false
         turning_left = false
@@ -166,6 +168,7 @@ function make_uturn(direction = "left") {
 
 //state handler
 basic.forever(function () {
+    //scan behavior
     if (scan) {
         dist = maqueen.Ultrasonic()
         move = true
@@ -177,19 +180,22 @@ basic.forever(function () {
             approach = true
             target = dist
         }
-        if (!timer){
+        if (!timer) {
             start = input.runningTime()
-            timer =true
+            timer = true
         }
-        now =input.runningTime()
-        if ((now-start)>=20000){
+        now = input.runningTime()
+        if ((now - start) >= 20000) {
             scan = false
             searching = true
             move = false
             turn_right = false
+            timer = false
         }
         basic.pause(25)
-    }else if (approach){
+    }
+    //approach when object detected
+    else if (approach) {
         move = true
         move_forward = true
         dist = maqueen.Ultrasonic()
@@ -206,15 +212,102 @@ basic.forever(function () {
             maqueen.servoRun(maqueen.Servos.S1, 0)
             basic.pause(1000)
             approach = false
-        }else if (dist <= target){
+        } else if (dist <= target) {
             target = dist
-        }else if (dist >= target){
+        } else if (dist >= target) {
             approach = false
             move_forward = false
             move = false
             scan = true
         }
-    }else if (transport){
-        
+    }
+    //ball transport once captured
+    else if (transport) {
+        move = true
+        move_back = true
+        let right = maqueen.readPatrol(maqueen.Patrol.PatrolRight)
+        basic.pause(10)
+        let left = maqueen.readPatrol(maqueen.Patrol.PatrolLeft)
+        basic.pause(10)
+        if (right == 0 || left == 0) {
+            move = false
+            move_back = false
+            transport = false
+            release = true
+        }
+    }
+    //ball release
+    else if (release) {
+        maqueen.servoRun(maqueen.Servos.S1, 180)
+        release = false
+        repositioning = true
+    }
+    //going back into the board
+    else if (repositioning) {
+        move = true
+        move_forward = true
+        if (!timer) {
+            start = input.runningTime()
+            timer = true
+        }
+        now = input.runningTime()
+        if ((now - start) >= 6000) {
+            repositioning = false
+            scan = true
+            move = false
+            move_forward = false
+            timer = false
+        }
+    }
+    //if scan gives nothing after 20 sec searching is enabled for 20 sec
+    else if (searching) {
+        let right = maqueen.readPatrol(maqueen.Patrol.PatrolRight)
+        basic.pause(10)
+        let left = maqueen.readPatrol(maqueen.Patrol.PatrolLeft)
+        basic.pause(10)
+        if (left == 0) {
+            prob_uturn = Math.floor(Math.random() * 10)
+            if (prob_uturn == 0 || nb_chng == 5) {
+                nb_chng = 0
+                make_uturn("right")
+            } else {
+                nb_chng += 1
+                maqueen.motorRun(maqueen.Motors.M2, maqueen.Dir.CCW, 50)
+            }
+        } else {
+            maqueen.motorRun(maqueen.Motors.M2, maqueen.Dir.CW, 50)
+        }
+        if (right == 0) {
+            prob_uturn = Math.floor(Math.random() * 10)
+            if (prob_uturn == 0 || nb_chng == 5) {
+                nb_chng = 0
+                make_uturn("left")
+            } else {
+                nb_chng += 1
+                maqueen.motorRun(maqueen.Motors.M1, maqueen.Dir.CCW, 50)
+            }
+        } else {
+            maqueen.motorRun(maqueen.Motors.M1, maqueen.Dir.CW, 50)
+        }
+        basic.pause(50)
+        maqueen.motorStop(maqueen.Motors.All)
+        dist = maqueen.Ultrasonic()
+        if (dist <= 6) {
+            searching = false
+            approach = true
+            target = dist
+        }
+        if (!timer) {
+            start = input.runningTime()
+            timer = true
+        }
+        now = input.runningTime()
+        if ((now - start) >= 20000) {
+            repositioning = false
+            scan = true
+            move = false
+            move_forward = false
+            timer = false
+        }
     }
 })
