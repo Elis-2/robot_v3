@@ -17,6 +17,7 @@ let release = false
 let transport = false
 let capture = false
 let positioning = false
+let pos_servo = 0
 radio.setGroup(2)
 radio.sendString("")
 basic.showIcon(IconNames.No)
@@ -58,3 +59,69 @@ basic.forever(function () {
         basic.pause(25)
     }
 })
+radio.onReceivedValue(function (name, value) {
+    if (name == "right") {
+        basic.showLeds(`
+            . . . . .
+            . . . # .
+            # # # # #
+            . . . # .
+            . . . . .
+            `)
+        fnc_turn_right()
+    } else if (name == "left") {
+        basic.showLeds(`
+            . . . . .
+            . # . . .
+            # # # # #
+            . # . . .
+            . . . . .
+            `)
+        turn_left()
+    } else if (name == "fwd") {
+        basic.showLeds(`
+            . . # . .
+            . # # # .
+            . . # . .
+            . . # . .
+            . . # . .
+            `)
+        move_fwd()
+    } else if (name == "servo") {
+        basic.showLeds(`
+            # # # # #
+            . . # . .
+            # # # # #
+            . # # # .
+            . # # # .
+            `)
+        turn_servo()
+    }
+})
+function move_fwd() {
+    maqueen.motorRun(maqueen.Motors.All, maqueen.Dir.CW, 100)
+    basic.pause(50)
+    maqueen.motorStop(maqueen.Motors.All)
+}
+radio.onReceivedNumber(function (receivedNumber) {
+    if (receivedNumber == 0) {
+        basic.showIcon(IconNames.Yes)
+        radio.sendNumber(1)
+    }
+})
+function turn_left() {
+    maqueen.motorRun(maqueen.Motors.M1, maqueen.Dir.CCW, 100)
+    maqueen.motorRun(maqueen.Motors.M2, maqueen.Dir.CW, 100)
+    basic.pause(50)
+    maqueen.motorStop(maqueen.Motors.All)
+}
+function fnc_turn_right() {
+    maqueen.motorRun(maqueen.Motors.M2, maqueen.Dir.CCW, 100)
+    maqueen.motorRun(maqueen.Motors.M1, maqueen.Dir.CW, 100)
+    basic.pause(50)
+    maqueen.motorStop(maqueen.Motors.All)
+}
+function turn_servo() {
+    pos_servo = (pos_servo + 180) % 360
+    maqueen.servoRun(maqueen.Servos.S1, pos_servo)
+}
