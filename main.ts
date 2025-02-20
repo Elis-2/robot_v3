@@ -1,6 +1,6 @@
 //speeds
-const MOVEMENT_SPEED = 25
-const TURN_SPEED = 25
+let movement_speed = 25
+let turn_speed = 25
 
 //movement
 let moving = false
@@ -125,21 +125,21 @@ radio.onReceivedNumber(function (receivedNumber) {
 //movement handler
 basic.forever(function () {
     if (turn_right && !(turning_right)) {
-        maqueen.motorRun(maqueen.Motors.M1, maqueen.Dir.CW, TURN_SPEED)
-        maqueen.motorRun(maqueen.Motors.M2, maqueen.Dir.CCW, TURN_SPEED)
+        maqueen.motorRun(maqueen.Motors.M1, maqueen.Dir.CW, turn_speed)
+        maqueen.motorRun(maqueen.Motors.M2, maqueen.Dir.CCW, turn_speed)
         turning_right = true
         turning_left = false
         moving = true
     } else if (turn_left && !(turning_left)) {
-        maqueen.motorRun(maqueen.Motors.M1, maqueen.Dir.CW, TURN_SPEED)
-        maqueen.motorRun(maqueen.Motors.M2, maqueen.Dir.CCW, TURN_SPEED)
+        maqueen.motorRun(maqueen.Motors.M1, maqueen.Dir.CW, turn_speed)
+        maqueen.motorRun(maqueen.Motors.M2, maqueen.Dir.CCW, turn_speed)
         turning_left = true
         turning_right = false
         moving = true
     } else if (move_forward && !moving_forward) {
-        maqueen.motorRun(maqueen.Motors.All, maqueen.Dir.CW, MOVEMENT_SPEED)
+        maqueen.motorRun(maqueen.Motors.All, maqueen.Dir.CW, movement_speed)
     } else if (move_back && !moving_back) {
-        maqueen.motorRun(maqueen.Motors.All, maqueen.Dir.CCW, MOVEMENT_SPEED)
+        maqueen.motorRun(maqueen.Motors.All, maqueen.Dir.CCW, movement_speed)
     } else if (!(move) && moving) {
         maqueen.motorStop(maqueen.Motors.All)
         moving = false
@@ -212,6 +212,7 @@ basic.forever(function () {
             maqueen.servoRun(maqueen.Servos.S1, 0)
             basic.pause(1000)
             approach = false
+            transport = true
         } else if (dist <= target) {
             target = dist
         } else if (dist >= target) {
@@ -223,6 +224,7 @@ basic.forever(function () {
     }
     //ball transport once captured
     else if (transport) {
+        movement_speed = 20
         move = true
         move_back = true
         let right = maqueen.readPatrol(maqueen.Patrol.PatrolRight)
@@ -234,6 +236,7 @@ basic.forever(function () {
             move_back = false
             transport = false
             release = true
+            movement_speed = 25
         }
     }
     //ball release
