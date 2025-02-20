@@ -11,6 +11,9 @@ radio.onReceivedNumber(function (receivedNumber) {
     if (receivedNumber == 0) {
         basic.showIcon(IconNames.Yes)
         radio.sendNumber(1)
+    }else if (receivedNumber == 2){
+        basic.showIcon(IconNames.Target)
+        scan = true
     }
 })
 function fnc_turn_left () {
@@ -64,6 +67,7 @@ radio.onReceivedValue(function (name, value) {
         turn_servo()
     }
 })
+let scan = false
 let approach = false
 let dist = 0
 let turning = false
@@ -83,7 +87,6 @@ radio.sendString("")
 basic.showIcon(IconNames.No)
 maqueen.writeLED(maqueen.LED.LEDLeft, maqueen.LEDswitch.turnOn)
 maqueen.writeLED(maqueen.LED.LEDRight, maqueen.LEDswitch.turnOn)
-let scan = true
 basic.forever(function () {
     if (turn_right && !(turning_right)) {
         maqueen.motorRun(maqueen.Motors.M1, maqueen.Dir.CW, 50)
